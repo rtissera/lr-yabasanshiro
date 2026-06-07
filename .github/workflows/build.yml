@@ -1,0 +1,48 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: vulkan
+            make: HAVE_VULKAN=1
+          - name: opengl
+            make: ""
+          - name: gles
+            make: FORCE_GLES=1 HAVE_VULKAN=0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            zlib1g-dev libflac-dev liblzma-dev libzstd-dev \
+            libgl1-mesa-dev libgles2-mesa-dev \
+            libvulkan-dev libshaderc-dev
+
+      - name: Build (${{ matrix.name }})
+        run: |
+          make clean
+          make ${{ matrix.make }} -j$(nproc)
+
+      - name: Verify artifact
+        run: |
+          test -f yabasanshiro_libretro.so
+          file yabasanshiro_libretro.so
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yabasanshiro_libretro_${{ matrix.name }}
+          path: yabasanshiro_libretro.so

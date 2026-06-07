@@ -1,0 +1,15 @@
+# Normalize line endings; let git decide text vs binary
+* text=auto eol=lf
+
+# Vendored upstream code — exclude from GitHub language stats
+src/libretro/libretro-common/** linguist-vendored
+src/musashi/**                  linguist-vendored
+
+# Generated CPU dispatch tables — vendored/generated, not hand-written
+src/musashi/m68kops.c           linguist-generated
+src/musashi/m68kops.h           linguist-generated
+
+# Binary assets
+*.png  binary
+*.bin  binary
+*.ico  binary

@@ -48,14 +48,12 @@ ifeq ($(ARCH),x86_64)
 	USE_X86_DRC = 1
 	DYNAREC_DEVMIYAX ?= 1
 	FLAGS += -DX86_64
-	LDFLAGS += -lGL
 else ifeq ($(ARCH),aarch64)
 	HAVE_SSE = 0
 	USE_AARCH64_DRC = 1
 	DYNAREC_DEVMIYAX ?= 1
 	FLAGS += -DAARCH64
 	ALLOW_POLYGON_MODE = 0
-	LDFLAGS += -lGL
 else
 $(error Unsupported architecture: $(ARCH). Only x86_64 and aarch64 are supported.)
 endif
@@ -119,6 +117,7 @@ ifeq ($(FORCE_GLES), 1)
 	endif
 else
 	FLAGS += -D_OGL3_
+	LDFLAGS += -lGL
 	ifeq ($(FORCE_GLEW), 1)
 		FLAGS += -DGLEW_STATIC -D_USEGLEW_ -DGLEW_NO_GLU
 	else
