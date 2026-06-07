@@ -1,0 +1,198 @@
+SOURCE_DIR := $(CORE_DIR)/src
+LIBRETRO_DIR := $(CORE_DIR)/src/libretro
+LIBRETRO_COMM_DIR := $(CORE_DIR)/src/libretro/libretro-common
+
+INCLUDE_DIRS := \
+	$(CORE_DIR)/src/libretro \
+	$(SOURCE_DIR) \
+	$(LIBRETRO_COMM_DIR)/include \
+	$(LIBRETRO_COMM_DIR)/include/libchdr \
+	$(LIBRETRO_COMM_DIR)/include/7zip \
+	$(SOURCE_DIR)/musashi \
+	$(CORE_DIR)/stub_include \
+	$(SOURCE_DIR)/vulkan \
+	$(SOURCE_DIR)/vulkan/include \
+	$(SOURCE_DIR)/vulkan/Include
+
+SOURCES_S :=
+SOURCES_ASM :=
+
+SOURCES_C := $(SOURCE_DIR)/osdcore.c \
+	$(SOURCE_DIR)/bios.c \
+	$(SOURCE_DIR)/cdbase.c \
+	$(SOURCE_DIR)/cheat.c \
+	$(SOURCE_DIR)/coffelf.c \
+	$(SOURCE_DIR)/cs0.c \
+	$(SOURCE_DIR)/cs1.c \
+	$(SOURCE_DIR)/cs2.c \
+	$(SOURCE_DIR)/debug.c \
+	$(SOURCE_DIR)/error.c \
+	$(SOURCE_DIR)/gameinfo.c \
+	$(SOURCE_DIR)/japmodem.c \
+	$(SOURCE_DIR)/memory.c \
+	$(SOURCE_DIR)/movie.c \
+	$(SOURCE_DIR)/netlink.c \
+	$(SOURCE_DIR)/peripheral.c \
+	$(SOURCE_DIR)/profile.c \
+	$(SOURCE_DIR)/scspdsp.c \
+	$(SOURCE_DIR)/scu.c \
+	$(SOURCE_DIR)/sh2cache.c \
+	$(SOURCE_DIR)/sh2core.c \
+	$(SOURCE_DIR)/sh2d.c \
+	$(SOURCE_DIR)/sh2iasm.c \
+	$(SOURCE_DIR)/sh2int.c \
+	$(SOURCE_DIR)/smpc.c \
+	$(SOURCE_DIR)/m68kcore.c \
+	$(SOURCE_DIR)/m68kd.c \
+	$(SOURCE_DIR)/vidogl.c \
+	$(SOURCE_DIR)/yglcache.c \
+	$(SOURCE_DIR)/ygles.c \
+	$(SOURCE_DIR)/yglshaderes.c \
+	$(SOURCE_DIR)/snddummy.c \
+	$(SOURCE_DIR)/vidshared.c \
+	$(SOURCE_DIR)/vidsoft.c \
+	$(SOURCE_DIR)/titan/titan.c \
+	$(SOURCE_DIR)/yabause.c \
+	$(LIBRETRO_COMM_DIR)/compat/compat_posix_string.c \
+	$(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
+	$(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c \
+	$(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
+	$(LIBRETRO_COMM_DIR)/file/file_path.c \
+	$(LIBRETRO_COMM_DIR)/file/file_path_io.c \
+	$(LIBRETRO_COMM_DIR)/time/rtime.c \
+	$(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.c \
+	$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c \
+	$(CORE_DIR)/src/libretro/libretro.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_bitstream.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_cdrom.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_chd.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_flac.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_flac_codec.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_huffman.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_zlib.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_zstd.c \
+	$(LIBRETRO_COMM_DIR)/streams/file_stream.c \
+	$(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c
+
+# LZMA SDK sources (for HAVE_7ZIP CHD support)
+SOURCES_C += \
+	$(LIBRETRO_COMM_DIR)/include/7zip/LzmaDec.c \
+	$(LIBRETRO_COMM_DIR)/include/7zip/LzmaEnc.c \
+	$(LIBRETRO_COMM_DIR)/include/7zip/LzFind.c \
+	$(LIBRETRO_COMM_DIR)/include/7zip/LzFindMt.c \
+	$(LIBRETRO_COMM_DIR)/include/7zip/LzFindOpt.c \
+	$(LIBRETRO_COMM_DIR)/include/7zip/CpuArch.c \
+	$(LIBRETRO_COMM_DIR)/include/7zip/Alloc.c \
+	$(LIBRETRO_COMM_DIR)/include/7zip/Threads.c \
+	$(LIBRETRO_COMM_DIR)/formats/libchdr/libchdr_lzma.c
+
+ifeq ($(FORCE_GLEW), 1)
+	SOURCES_C += $(SOURCE_DIR)/gllibs/glew/glew.c
+	INCLUDE_DIRS += $(SOURCE_DIR)/gllibs/include
+else
+	SOURCES_C += $(LIBRETRO_COMM_DIR)/glsm/glsm.c \
+		$(LIBRETRO_COMM_DIR)/glsym/rglgen.c \
+		$(CORE_DIR)/src/libretro/glsym_private.c
+	ifeq ($(FORCE_GLES), 1)
+		SOURCES_C += $(LIBRETRO_COMM_DIR)/glsym/glsym_es3.c
+	else
+		SOURCES_C += $(LIBRETRO_COMM_DIR)/glsym/glsym_gl.c
+	endif
+endif
+
+SOURCES_CXX := $(SOURCE_DIR)/Counter.cpp \
+	$(SOURCE_DIR)/PlayRecorder.cpp \
+	$(SOURCE_DIR)/scsp.cpp \
+	$(SOURCE_DIR)/vdp1.cpp \
+	$(SOURCE_DIR)/vdp2.cpp \
+	$(SOURCE_DIR)/jsoncpp.cpp \
+	$(SOURCE_DIR)/ygl_texture.cpp \
+	$(LIBRETRO_DIR)/yui_libretro.cpp
+
+ifeq ($(HAVE_MUSASHI), 1)
+	SOURCES_C += $(SOURCE_DIR)/musashi/m68kcpu.c \
+	$(SOURCE_DIR)/musashi/m68kops.c \
+	$(SOURCE_DIR)/musashi/m68kopnz.c \
+	$(SOURCE_DIR)/musashi/m68kopac.c \
+	$(SOURCE_DIR)/musashi/m68kopdm.c \
+	$(SOURCE_DIR)/m68kmusashi.c
+else
+	SOURCES_C += $(SOURCE_DIR)/c68k/c68k.c \
+	$(SOURCE_DIR)/m68kc68k.c
+endif
+
+ifeq ($(DYNAREC_DEVMIYAX), 1)
+	ifeq ($(USE_ARM_DRC), 1)
+		SOURCES_S += $(SOURCE_DIR)/sh2_dynarec_devmiyax/dynalib_arm.s
+	else ifeq ($(USE_AARCH64_DRC), 1)
+		SOURCES_S += $(SOURCE_DIR)/sh2_dynarec_devmiyax/dynalib_arm64.s
+	else ifeq ($(USE_X86_DRC), 1)
+		SOURCES_ASM += $(SOURCE_DIR)/sh2_dynarec_devmiyax/dynalib_x86_64.asm
+	endif
+	SOURCES_CXX += $(SOURCE_DIR)/sh2_dynarec_devmiyax/DynarecSh2CInterface.cpp \
+		$(SOURCE_DIR)/sh2_dynarec_devmiyax/DynarecSh2.cpp
+endif
+
+ifeq ($(USE_RTHREADS), 1)
+	SOURCES_C += $(SOURCE_DIR)/thr-rthreads.c \
+		$(LIBRETRO_COMM_DIR)/rthreads/rthreads.c
+else
+	SOURCES_C += $(SOURCE_DIR)/thr-linux.c
+endif
+
+ifeq ($(HAVE_VULKAN), 1)
+	SOURCES_C += $(CORE_DIR)/src/libretro/vidvulkan_libretro.c
+	SOURCES_C += $(LIBRETRO_COMM_DIR)/vulkan/vulkan_symbol_wrapper.c
+	SOURCES_CXX += $(CORE_DIR)/src/libretro/vidvulkan_bridge.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/VIDVulkan.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/VulkanScene.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/VdpPipeline.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/VdpPipelineFactory.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/Vdp1Renderer.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/TextureManager.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/VertexManager.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/FramebufferRenderer.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/WindowRenderer.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/Shared.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/Platform.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/VulkanTools.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/Renderer.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/Window.cpp
+	SOURCES_CXX += $(SOURCE_DIR)/vulkan/RBGGeneratorVulkan.cpp
+endif
+
+M68KMAKE_EXE = m68kmake$(EXE_EXT)
+GEN68K_EXE = gen68k$(EXE_EXT)
+GEN68K_INC_SOURCES := $(SOURCE_DIR)/c68k/c68k_ini.inc \
+	$(SOURCE_DIR)/c68k/c68k_op0.inc \
+	$(SOURCE_DIR)/c68k/c68k_op1.inc \
+	$(SOURCE_DIR)/c68k/c68k_op2.inc \
+	$(SOURCE_DIR)/c68k/c68k_op3.inc \
+	$(SOURCE_DIR)/c68k/c68k_op4.inc \
+	$(SOURCE_DIR)/c68k/c68k_op5.inc \
+	$(SOURCE_DIR)/c68k/c68k_op6.inc \
+	$(SOURCE_DIR)/c68k/c68k_op7.inc \
+	$(SOURCE_DIR)/c68k/c68k_op8.inc \
+	$(SOURCE_DIR)/c68k/c68k_op9.inc \
+	$(SOURCE_DIR)/c68k/c68k_opA.inc \
+	$(SOURCE_DIR)/c68k/c68k_opB.inc \
+	$(SOURCE_DIR)/c68k/c68k_opC.inc \
+	$(SOURCE_DIR)/c68k/c68k_opD.inc \
+	$(SOURCE_DIR)/c68k/c68k_opE.inc \
+	$(SOURCE_DIR)/c68k/c68k_opF.inc
+
+M68KMAKE_INC_SOURCES := $(SOURCE_DIR)/musashi/m68kops.h \
+	$(SOURCE_DIR)/musashi/m68kopac.c \
+	$(SOURCE_DIR)/musashi/m68kopdm.c \
+	$(SOURCE_DIR)/musashi/m68kopnz.c \
+	$(SOURCE_DIR)/musashi/m68kops.c
+
+C68KEXEC_SOURCE := $(SOURCE_DIR)/c68k/c68kexec.c
+C68KEXEC_OBJECT := $(C68KEXEC_SOURCE:.c=.c.o)
+
+OBJECTS_C += $(SOURCES_C:.c=.c.o)
+OBJECTS_CXX += $(SOURCES_CXX:.cpp=.cpp.o)
+OBJECTS_S += $(SOURCES_S:.s=.s.o)
+OBJECTS_ASM += $(SOURCES_ASM:.asm=.asm.o)
+
+OBJECTS := $(OBJECTS_C) $(OBJECTS_CXX) $(OBJECTS_S) $(OBJECTS_ASM)

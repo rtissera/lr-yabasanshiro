@@ -1,0 +1,24 @@
+# Build artifacts
+*.o
+*.d
+*.so
+*.so.*
+*.a
+
+# Generated tool binaries
+src/musashi/m68kmake
+src/c68k/gen68k
+*.exe
+
+# Test/run scratch
+*.log
+SS-*.png
+
+# Prebuilt platform binaries from upstream (Windows/Mac) — unused by Linux build
+*.lib
+*.dll
+*.dylib
+
+# Editor/OS cruft
+*.swp
+.DS_Store
