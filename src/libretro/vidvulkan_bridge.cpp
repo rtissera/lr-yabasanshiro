@@ -166,7 +166,14 @@ public:
     ici.arrayLayers = 1;
     ici.samples = VK_SAMPLE_COUNT_1_BIT;
     ici.tiling = VK_IMAGE_TILING_OPTIMAL;
-    ici.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    /* TRANSFER_DST is required because the upscale path (resolution_mode 2x/4x)
+       blits the sub render target into this image via vkCmdBlitImage; without it
+       the blit is invalid usage and the frame comes out black. */
+    /* SAMPLED: the window render pass finalLayout is SHADER_READ_ONLY and the
+       frontend samples this image via set_image, both of which require it.
+       TRANSFER_DST: the upscale path blits the sub render target into here. */
+    ici.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     ici.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     if (vkCreateImage(device, &ici, nullptr, &_out_img) != VK_SUCCESS) return;
@@ -305,7 +312,14 @@ public:
     ici.arrayLayers = 1;
     ici.samples = VK_SAMPLE_COUNT_1_BIT;
     ici.tiling = VK_IMAGE_TILING_OPTIMAL;
-    ici.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    /* TRANSFER_DST is required because the upscale path (resolution_mode 2x/4x)
+       blits the sub render target into this image via vkCmdBlitImage; without it
+       the blit is invalid usage and the frame comes out black. */
+    /* SAMPLED: the window render pass finalLayout is SHADER_READ_ONLY and the
+       frontend samples this image via set_image, both of which require it.
+       TRANSFER_DST: the upscale path blits the sub render target into here. */
+    ici.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     ici.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     if (vkCreateImage(device, &ici, nullptr, &_out_img) != VK_SUCCESS) return;

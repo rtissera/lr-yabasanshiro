@@ -1186,17 +1186,20 @@ void VIDVulkan::Vdp2DrawEnd(void) {
 
       blitSubRenderTarget(commandBuffer, viewportData);
 
+#ifndef __LIBRETRO__
+      /* The "keep" render pass has loadOp=CLEAR; on libretro it would wipe the
+         image we just blitted back to black. It only exists to host the OSD
+         overlay, which is disabled here, so skip it entirely. */
       render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
       render_pass_begin_info.renderPass = _renderer->getWindow()->GetVulkanKeepRenderPass();
       c.setViewport(0, 1, &viewport);
-      c.setScissor(0, 1, &scissor);      
+      c.setScissor(0, 1, &scissor);
       vkCmdBeginRenderPass(commandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-#ifndef __LIBRETRO__
       NanovgVulkanSetDevices(device, this->getPhysicalDevice(), _renderer->getWindow()->GetVulkanKeepRenderPass(),
                              commandBuffer, pretransformFlag);
       OSDDisplayMessages(NULL, finalWidth, finalHeight);
-#endif
       vkCmdEndRenderPass(commandBuffer);
+#endif
 
     }
   }
@@ -6294,8 +6297,11 @@ void VIDVulkan::generateOffscreenPath(int width, int height) {
   image.arrayLayers = 1;
   image.samples = VK_SAMPLE_COUNT_1_BIT;
   image.tiling = VK_IMAGE_TILING_OPTIMAL;
-  // We will sample directly from the color attachment
-  image.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  // We will sample directly from the color attachment, and (in the libretro
+  // upscale path) blit it into the output image via vkCmdBlitImage — which
+  // requires TRANSFER_SRC. Without it the blit is invalid usage -> black frame.
+  image.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
   VkMemoryAllocateInfo memAlloc = {};
   memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -6882,8 +6888,11 @@ void VIDVulkan::generateSubRenderTarget(int width, int height) {
   image.arrayLayers = 1;
   image.samples = VK_SAMPLE_COUNT_1_BIT;
   image.tiling = VK_IMAGE_TILING_OPTIMAL;
-  // We will sample directly from the color attachment
-  image.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  // We will sample directly from the color attachment, and (in the libretro
+  // upscale path) blit it into the output image via vkCmdBlitImage — which
+  // requires TRANSFER_SRC. Without it the blit is invalid usage -> black frame.
+  image.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
   VkMemoryAllocateInfo memAlloc = vks::initializers::memoryAllocateInfo();
   VkMemoryRequirements memReqs;
@@ -7033,8 +7042,17 @@ void VIDVulkan::generateSubRenderTarget(int width, int height) {
 
   renderPassInfo.subpassCount = 1;
   renderPassInfo.pSubpasses = &subpassDescription;
+#ifdef __LIBRETRO__
+  /* The window render pass the VDP2 pipelines are built against has NO subpass
+     dependencies. Render-pass compatibility requires dependencyCount to match,
+     else the validation layer rejects every draw (dependencyCount 2 != 0) and
+     the sub render target stays black. Match it: no dependencies. */
+  renderPassInfo.dependencyCount = 0;
+  renderPassInfo.pDependencies = nullptr;
+#else
   renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
   renderPassInfo.pDependencies = dependencies.data();
+#endif
 
   VK_CHECK_RESULT(vkCreateRenderPass(device, &renderPassInfo, nullptr, &subRenderTarget.renderPass));
 
