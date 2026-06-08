@@ -175,6 +175,17 @@ void retro_set_environment(retro_environment_t cb)
    libretro_set_core_options(cb, &option_cats_supported);
    environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)ports);
 
+   /* RetroAchievements support. The Saturn Work RAM exposed via set_memory_maps()
+      (HWRAM @0x06000000, LWRAM @0x00200000) is stored 16-bit byte-swapped on a
+      little-endian host (T2 macros: byte access is mem[addr ^ 1]) — the exact
+      swizzle Beetle Saturn / Yabause use and that the RA Saturn sets were
+      authored against (rcheevos #302). So our raw buffers are already
+      RA-compatible; no de-swizzle shadow needed. */
+   {
+      bool support_achievements = true;
+      environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS, &support_achievements);
+   }
+
 #ifdef HAVE_VULKAN
    {
       struct retro_core_options_update_display_callback update_display_cb;
